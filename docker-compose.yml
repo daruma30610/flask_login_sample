@@ -1,0 +1,32 @@
+version: '3.1'
+
+services:
+
+  flask_login_app:
+    container_name: flask_login_app
+    image: flask_login_app
+    build: ./app
+    volumes:
+      - ./app/src:/usr/src/apps
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_APP=/usr/src/apps/flask_login_app
+      - APP_ENV=Development # 独自の環境変数
+      - FLASK_DEBUG=1
+    command: flask run --host=0.0.0.0
+    restart: always
+
+  flask_login_app_db:
+    container_name: flask_login_app_db
+    image: flask_login_app_db
+    build: ./db
+    volumes:
+    - ./db/initdb.d:/docker-entrypoint-initdb.d
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      TZ: "Asia/Tokyo"
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
