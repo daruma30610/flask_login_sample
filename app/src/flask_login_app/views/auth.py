@@ -28,13 +28,7 @@ def signin():
 @auth_blueprint.route('/signout')
 @login_required
 def signout():
-    # 名前とメールアドレスをセッションから削除
-    if 'name' in session:
-        session.pop('name', None)
-    
-    if 'email' in session:
-        session.pop("email", None)
-    
+
     # ログアウト
     logout_user()
 
