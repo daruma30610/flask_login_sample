@@ -3,6 +3,7 @@ from flask_login import login_required, login_user, logout_user
 from flask_login_app.models import User
 from flask_login_app import db, bcrypt
 from email_validator import validate_email, EmailNotValidError
+from sqlalchemy.exc import SQLAlchemyError
 
 
 auth_blueprint = Blueprint('auth', __name__)
@@ -59,16 +60,21 @@ def signup():
             return redirect(url_for('auth.signup'))
 
         # ユーザーを作成
-        new_user = User(name=name, email=email, password=bcrypt.generate_password_hash(password))
-        db.session.add(new_user)
-        db.session.commit()
-
-        # 名前とメールアドレスをセッションから削除
-        if 'name' in session:
-            session.pop('name', None)
-        
-        if 'email' in session:
-            session.pop('email', None)
+        try:
+            new_user = User(name=name, email=email, password=bcrypt.generate_password_hash(password))
+            db.session.add(new_user)
+            db.session.commit()
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            flash('Failed to create user')
+            return redirect(url_for('auth.signup'))
+        finally:
+            # 名前とメールアドレスをセッションから削除
+            if 'name' in session:
+                session.pop('name', None)
+            
+            if 'email' in session:
+                session.pop('email', None)
 
         return redirect(url_for('auth.signin'))
 
